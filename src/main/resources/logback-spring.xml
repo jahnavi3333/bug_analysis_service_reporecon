@@ -1,0 +1,6 @@
+<configuration>
+    <appender name="ERROR_JSON" class="com.example.demo.logging.ErrorLogAppender"/>
+    <root level="ERROR">
+        <appender-ref ref="ERROR_JSON"/>
+    </root>
+</configuration>

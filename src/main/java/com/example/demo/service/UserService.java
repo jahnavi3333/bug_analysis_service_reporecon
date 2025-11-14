@@ -1,24 +1,50 @@
 package com.example.demo.service;
 
+import com.example.demo.logs.LogService;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
 
     @Autowired
-    private UserRepository repo;
+    private UserRepository dao;
+
+    @Autowired
+    private LogService logService;
 
     public String getUserName(int id) {
+        try {
+            // Simulate runtime exceptions for logging
+            Optional<User> userOpt = dao.findById(id);
 
-        // ❌ NullPointerException (repo.findUserById returns NULL)
-        User user = repo.findUserById(id);
+            if (userOpt.isEmpty()) {
+                throw new IllegalArgumentException("Invalid user ID: " + id);
+            }
 
-        // ❌ ArithmeticException
-        int crash = 5 / 0;
+            User user = userOpt.get();
 
-        return user.getName().toUpperCase(); // NPE guaranteed
+            // Example: simulate ArithmeticException
+            int crash = 10 / 0;
+
+            return user.getName().toUpperCase();
+
+        } catch (Exception ex) {
+            logService.logError(ex.toString());
+            throw ex; // rethrow for ControllerAdvice
+        }
+    }
+
+    public void saveUser(User user) {
+        try {
+            dao.save(user);
+        } catch (Exception ex) {
+            logService.logError(ex.toString());
+            throw ex;
+        }
     }
 }

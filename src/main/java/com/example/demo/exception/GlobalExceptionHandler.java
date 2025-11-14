@@ -1,41 +1,36 @@
 package com.example.demo.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String LOG_FILE = "sample_logs.json";
-    private ObjectMapper mapper = new ObjectMapper();
+    private final File logFile = new File("sample_logs.json");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // This will catch all exceptions thrown in Controllers/Services/Repositories
     @ExceptionHandler(Exception.class)
-    public String handleException(Exception ex) {
-        System.out.println("Caught exception: " + ex.getMessage());
+    public void handleAllExceptions(Exception ex) {
+        Map<String, Object> logEntry = new HashMap<>();
+        logEntry.put("timestamp", LocalDateTime.now().toString());
+        logEntry.put("exception", ex.getClass().getName());
+        logEntry.put("message", ex.getMessage());
+        logEntry.put("stackTrace", ex.getStackTrace());
 
-        Map<String, Object> logEvent = new HashMap<>();
-        logEvent.put("timestamp", System.currentTimeMillis());
-        logEvent.put("message", ex.toString());
-
-        try {
-            File file = new File(LOG_FILE);
-            Map[] existing = file.exists() ? mapper.readValue(file, Map[].class) : new Map[0];
-            Map[] updated = new Map[existing.length + 1];
-            System.arraycopy(existing, 0, updated, 0, existing.length);
-            updated[existing.length] = logEvent;
-            mapper.writerWithDefaultPrettyPrinter().writeValue(file, updated);
+        try (FileWriter fw = new FileWriter(logFile, true)) {
+            fw.write(objectMapper.writeValueAsString(logEntry));
+            fw.write(System.lineSeparator());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return "Error occurred: " + ex.getMessage();
     }
 }
