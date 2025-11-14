@@ -15,7 +15,7 @@ public class UserService {
     private UserRepository dao;
 
     @Autowired
-    private LogService logService;
+    public LogService logService;
 
     public String getUserName(int id) {
         try {
